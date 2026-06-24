@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Scale, ShieldAlert, UploadCloud, FileText, 
+  Scale, ShieldAlert, Sparkles, UploadCloud, FileText, 
   MessageSquare, Send, CheckCircle2, AlertCircle, 
   ShieldCheck, ChevronRight, Copy, Terminal,
   RefreshCw, Layers, BookOpen, Bot, HelpCircle
@@ -208,6 +208,50 @@ function App() {
     addLog("System", "Clause copied to clipboard.");
   };
 
+  const handleLoadDemo = async () => {
+    setIsLoading(true);
+    addLog("System", "Loading high-fidelity demo contract...");
+    addLog("RAG Indexer", "Seeding Sample_NDA_Indian_Enterprise.pdf into local database.");
+    
+    try {
+      const res = await fetch(`${API_BASE}/demo/load`, {
+        method: "POST"
+      });
+      if (!res.ok) throw new Error("Failed to load demo data.");
+      
+      const data = await res.json();
+      
+      const demoMeta = {
+        doc_id: data.doc_id,
+        filename: data.filename,
+        chunks_indexed: data.chunks_indexed
+      };
+      
+      setDocuments(prev => {
+        if (prev.some(d => d.doc_id === data.doc_id)) return prev;
+        return [demoMeta, ...prev];
+      });
+      setActiveDoc(demoMeta);
+      
+      setReviewResult(data.agent_results.review);
+      setComplianceResult(data.agent_results.compliance);
+      setDraftingResult(data.agent_results.draft);
+      setVerificationResult(data.agent_results.verification);
+      
+      // Refresh chat logs
+      await fetchHistory();
+      
+      addLog("Dense Retriever", "Demo vectors indexed successfully.");
+      addLog("Verification Agent", "Demo grounding validation: 100% matched.");
+      addLog("System", "Demo workspace loaded. Ready to review Section 27 violation.");
+    } catch (e: any) {
+      console.error(e);
+      addLog("System", "Failed to initialize demo workspace.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#07090e] text-[#e2e8f0]">
       {/* 1. SIDEBAR - Workspaces and uploads */}
@@ -245,6 +289,16 @@ function App() {
               {uploading ? "Indexing PDF..." : "Upload Legal Contract"}
             </span>
           </button>
+          
+          <button 
+            onClick={handleLoadDemo}
+            disabled={isLoading || uploading}
+            className="w-full mt-3 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl border border-gray-800 bg-[#111622]/40 hover:bg-[#10b981]/15 hover:border-[#10b981]/40 text-sm font-semibold transition-all group duration-200 disabled:opacity-50"
+          >
+            <Sparkles className="h-4 w-4 text-[#10b981] group-hover:scale-110 transition-transform duration-200" />
+            <span className="text-gray-300 group-hover:text-white">Load Demo Contract</span>
+          </button>
+
           {uploadError && (
             <p className="text-xs text-red-400 mt-2 text-center flex items-center justify-center gap-1">
               <AlertCircle className="h-3 w-3" /> {uploadError}

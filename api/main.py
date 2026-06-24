@@ -161,6 +161,118 @@ async def get_session_history(session_id: str, db: Session = Depends(get_db)):
     messages = db.query(DBMessage).filter(DBMessage.session_id == session_id).order_by(DBMessage.id.asc()).all()
     return [{"role": m.role, "content": m.content, "timestamp": m.timestamp} for m in messages]
 
+@app.post("/demo/load")
+async def load_demo_data(db: Session = Depends(get_db)):
+    """
+    Seeds the database with a high-fidelity sample contract 
+    and mock agent results to enable immediate exploration.
+    """
+    demo_doc_id = "demo-contract-india-nda"
+    session_id = "session_hackathon_demo"
+    
+    # 1. Check if demo doc already exists
+    existing_doc = db.query(DBDocument).filter(DBDocument.doc_id == demo_doc_id).first()
+    if existing_doc:
+        # Clear out messages to refresh session
+        db.query(DBMessage).filter(DBMessage.session_id == session_id).delete()
+        db.commit()
+    else:
+        # Create document entry
+        db_doc = DBDocument(
+            doc_id=demo_doc_id,
+            filename="Sample_NDA_Indian_Enterprise.pdf",
+            filepath="data/documents/sample_nda.pdf",
+            chunks_indexed=12
+        )
+        db.add(db_doc)
+        
+    # 2. Add sample chat history
+    demo_msgs = [
+        DBMessage(session_id=session_id, role="user", content="Review this NDA and check if it complies with Indian law."),
+        DBMessage(session_id=session_id, role="assistant", content="### LexAgent Analysis Report\n\nI have completed the review of **Sample_NDA_Indian_Enterprise.pdf** under the Indian Contract Act, 1872, and the Information Technology Act, 2000.\n\n* **Risk Profile**: MEDIUM\n* **Jurisdiction**: Out of State (Delhi Courts specified; should be Mumbai/Karnataka based on parties).\n* **Key Issues**: Section 27 Restraint of Trade restriction flagged in the confidentiality clause.")
+    ]
+    for msg in demo_msgs:
+        db.add(msg)
+        
+    db.commit()
+    
+    # 3. Return pre-made mock results that the frontend can read immediately
+    mock_results = {
+        "doc_id": demo_doc_id,
+        "filename": "Sample_NDA_Indian_Enterprise.pdf",
+        "chunks_indexed": 12,
+        "agent_results": {
+            "review": {
+                "document_type": "Non-Disclosure Agreement (NDA)",
+                "parties": ["Acme Enterprises Pvt Ltd", "Karthik Consulting Services"],
+                "effective_date": "2026-06-25",
+                "overall_risk": "medium",
+                "executive_summary": "This is a mutual non-disclosure agreement. It is generally standard but contains an overly broad restraint of trade clause under Section 27 of the Indian Contract Act and lacks clear governing law provisions for e-signatures.",
+                "clauses": [
+                    {
+                        "clause_type": "Restraint of Trade / Non-Compete",
+                        "clause_text": "The receiving party shall not engage in any competing consulting services in India for a period of 3 years post termination.",
+                        "page_reference": "Page 3, Section 8.2",
+                        "risk_level": "critical",
+                        "risk_explanation": "Direct restraint of trade. Section 27 of the Indian Contract Act, 1872 states that any agreement in restraint of trade is void to that extent. This clause is completely unenforceable in Indian courts.",
+                        "suggested_revision": "The receiving party shall not use any Confidential Information of the disclosing party to solicit the disclosing party's active clients for a period of 1 year post termination."
+                    },
+                    {
+                        "clause_type": "Limitation of Liability",
+                        "clause_text": "Neither party shall be liable to the other for any indirect, consequential, or punitive damages, and total liability is capped at INR 50,000.",
+                        "page_reference": "Page 4, Section 11.1",
+                        "risk_level": "high",
+                        "risk_explanation": "The liability cap of INR 50,000 is exceptionally low and unbalanced for commercial transactions involving proprietary tech transfer.",
+                        "suggested_revision": "Total liability of either party for all claims arising out of this Agreement shall be limited to the total fees paid in the 12 months preceding the claim."
+                    }
+                ]
+            },
+            "compliance": {
+                "is_compliant": False,
+                "summary": "Non-compliant elements detected under Section 27 of the Indian Contract Act.",
+                "issues": [
+                    {
+                        "law_reference": "Indian Contract Act, 1872 Sec 27",
+                        "clause_text": "not engage in any competing consulting services in India for a period of 3 years",
+                        "violation_description": "Any agreement restraining someone from exercising a lawful profession, trade or business is void under Indian statutory law.",
+                        "severity": "critical",
+                        "recommended_action": "Rewrite as a narrow non-solicit clause rather than a blanket non-compete."
+                    }
+                ]
+            },
+            "draft": {
+                "drafted_clause_type": "Arbitration (Mumbai Seat)",
+                "drafted_text": "Any dispute arising out of this Agreement shall be referred to arbitration administered by the Mumbai Centre for International Arbitration (MCIA) in accordance with the Arbitration and Conciliation Act, 1996. The seat and venue of arbitration shall be Mumbai, and proceedings shall be conducted in English.",
+                "key_terms_explained": ["MCIA administration", "Mumbai Seat & Venue", "Arbitration Act 1996"],
+                "commercial_implications": "Provides a fast-track corporate dispute resolution venue under institutional rules in Mumbai."
+            },
+            "verification": {
+                "is_grounded": True,
+                "hallucinated_claims": [],
+                "verified_claims": [
+                    "Non-compete duration is 3 years.",
+                    "Liability is capped at INR 50,000."
+                ],
+                "confidence_score": 1.0,
+                "verification_summary": "All review assertions correspond directly to Section 8.2 and Section 11.1 of the sample document chunks."
+            }
+        }
+    }
+    
+    # Also index mock chunks in local memory/ChromaDB so retrievers do not error out when user searches
+    chunks = [
+        {"id": "0", "text": "This Agreement shall be governed by the laws of India.", "metadata": {"page_reference": "Page 1"}},
+        {"id": "1", "text": "The receiving party shall not engage in any competing consulting services in India for a period of 3 years post termination.", "metadata": {"page_reference": "Page 3"}},
+        {"id": "2", "text": "Neither party shall be liable to the other for any indirect, consequential, or punitive damages, and total liability is capped at INR 50,000.", "metadata": {"page_reference": "Page 4"}}
+    ]
+    try:
+        await dense_retriever.index_chunks(chunks, demo_doc_id)
+        await asyncio.to_thread(sparse_retriever.index_chunks, chunks, demo_doc_id)
+    except Exception as e:
+        logger.warning(f"Failed to index demo chunks: {e}. Proceeding anyway.")
+        
+    return mock_results
+
 @app.get("/health")
 async def health():
     """Health check endpoint."""
