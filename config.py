@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     nim_api_key: str = Field(default="")
     nim_base_url: str = "https://integrate.api.nvidia.com/v1"
     nim_model: str = "nvidia/llama-3.1-nemotron-70b-instruct"
+    nim_reasoning_model: str = "nvidia/llama-3.1-nemotron-70b-instruct"
+    nim_fast_model: str = "nvidia/llama-3.1-8b-instruct"
+    nim_guardrail_model: str = "nvidia/llama-guard-3-8b"
     nim_embedding_model: str = "nvidia/nv-embedqa-e5-v5"
     
     # Retrieval

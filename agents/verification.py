@@ -5,6 +5,7 @@ from llm.structured import VerificationResult
 from retrieval.dense import DenseRetriever
 from retrieval.sparse import BM25Retriever
 from retrieval.fusion import reciprocal_rank_fusion
+from config import settings
 import logging
 
 logger = logging.getLogger("lexagent.agents.verification")
@@ -66,6 +67,7 @@ Flag anything that goes beyond what the source says."""
             system=VERIFICATION_SYSTEM,
             user=user_prompt,
             output_schema=VerificationResult,
+            model=settings.nim_reasoning_model,
         )
     except Exception as e:
         logger.error(f"Verification process failed: {e}")

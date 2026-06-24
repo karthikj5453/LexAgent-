@@ -5,6 +5,7 @@ from llm.structured import ContractReviewResult
 from retrieval.dense import DenseRetriever
 from retrieval.sparse import BM25Retriever
 from retrieval.fusion import reciprocal_rank_fusion
+from config import settings
 import logging
 
 logger = logging.getLogger("lexagent.agents.contract_review")
@@ -76,6 +77,7 @@ Identify all significant clauses, assess risks, reference the exact pages/sectio
             system=CONTRACT_REVIEW_SYSTEM,
             user=user_prompt,
             output_schema=ContractReviewResult,
+            model=settings.nim_reasoning_model,
         )
     except Exception as e:
         logger.error(f"Contract review generation failed: {e}")

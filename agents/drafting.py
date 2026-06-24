@@ -5,6 +5,7 @@ from llm.structured import DraftingResult
 from retrieval.dense import DenseRetriever
 from retrieval.sparse import BM25Retriever
 from retrieval.fusion import reciprocal_rank_fusion
+from config import settings
 import logging
 
 logger = logging.getLogger("lexagent.agents.drafting")
@@ -44,6 +45,7 @@ async def run_drafting(user_instruction: str, doc_id: str | None = None) -> Draf
             system=DRAFTING_SYSTEM,
             user=user_prompt,
             output_schema=DraftingResult,
+            model=settings.nim_reasoning_model,
         )
     except Exception as e:
         logger.error(f"Drafting failed: {e}")

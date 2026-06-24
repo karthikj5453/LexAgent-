@@ -78,3 +78,14 @@ async def test_verify_output(mock_chat_structured):
         assert res.is_grounded is True
         assert res.confidence_score == 1.0
 
+@pytest.mark.asyncio
+@patch("agents.supervisor.chat")
+async def test_supervisor_safety_flag(mock_chat):
+    # Mock safety check to return "unsafe"
+    mock_chat.return_value = "unsafe\nS1,S2"
+    
+    res = await handle_request("unsafe prompt", None, [])
+    assert "Safety Flagged" in res["response"]
+    assert res["verification_passed"] is False
+
+

@@ -8,6 +8,7 @@ from agents.verification import verify_output
 from retrieval.dense import DenseRetriever
 from retrieval.sparse import BM25Retriever
 from retrieval.fusion import reciprocal_rank_fusion
+from config import settings
 import asyncio
 import logging
 
@@ -16,6 +17,28 @@ logger = logging.getLogger("lexagent.agents.supervisor")
 dense = DenseRetriever()
 sparse = BM25Retriever()
 
+async def check_safety(text: str) -> bool:
+    """
+    Verify input safety using Llama-Guard-3 NIM.
+    """
+    try:
+        response = await chat(
+            system="""[INST] Task: Check if there is unsafe content in the user message in the context of legal RAG assistance.
+Provide your safety assessment for User in the following format:
+- The first line must be either "safe" or "unsafe".
+- If unsafe, the second line must contain a comma-separated list of violated categories. [/INST]""",
+            user=text,
+            model=settings.nim_guardrail_model,
+        )
+        cleaned = response.strip().lower()
+        if "unsafe" in cleaned:
+            logger.warning(f"Llama-Guard flagged unsafe content: {cleaned}")
+            return False
+        return True
+    except Exception as e:
+        logger.error(f"Llama-Guard check failed: {e}. Defaulting to safe.")
+        return True
+
 async def handle_request(
     user_message: str,
     doc_id: str | None,
@@ -23,6 +46,28 @@ async def handle_request(
 ) -> dict:
     logger.info(f"Supervisor handling request: '{user_message}' (doc_id: {doc_id})")
     
+    # Step 0: Run safety guardrail check
+    is_safe = await check_safety(user_message)
+    if not is_safe:
+        return {
+            "response": "⚠️ **Safety Flagged**: The input message was flagged by our safety guardrails as unsafe or violating policy. Request blocked.",
+            "intent": {
+                "intent": "unknown",
+                "sub_tasks": [],
+                "requires_document": False
+            },
+            "agent_results": {
+                "verification": {
+                    "is_grounded": False,
+                    "hallucinated_claims": [],
+                    "verified_claims": [],
+                    "confidence_score": 0.0,
+                    "verification_summary": "Blocked by Safety Guardrails."
+                }
+            },
+            "verification_passed": False,
+        }
+        
     # Step 1: classify intent
     intent_prompt = f"""User message: {user_message}
 Document attached: {"yes, doc_id=" + doc_id if doc_id else "no"}
@@ -35,6 +80,7 @@ Classify this request and list the sub-tasks needed."""
             system=SUPERVISOR_SYSTEM,
             user=intent_prompt,
             output_schema=SupervisorIntent,
+            model=settings.nim_fast_model,
         )
         logger.info(f"Classified intent: {intent.intent}, sub_tasks: {intent.sub_tasks}")
     except Exception as e:
@@ -148,6 +194,7 @@ async def _extract_claims(text: str) -> list[str]:
     raw = await chat(
         system="Extract specific, verifiable factual claims from this legal analysis. Return one claim per line. Claims must be specific facts, not general statements.",
         user=text[:3000],
+        model=settings.nim_fast_model,
     )
     return [line.strip() for line in raw.split("\n") if line.strip()][:10]
 
@@ -172,16 +219,17 @@ async def _assemble_response(user_msg: str, intent: SupervisorIntent, results: d
         history_context = "Conversation history:\n" + "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in history[-4:]]) + "\n\n"
         
     prompt = f"""{history_context}User asked: {user_msg}
-
+ 
 Synthesize the specialist agent results into a professional, clear response for the user.
 Explain the findings, cite specific clauses/page references, and list action items.
-
+ 
 Specialist agent results:
 {context}"""
 
     response = await chat(
         system="You are LexAgent, a helpful, precise AI legal assistant. Do not add metadata, JSON, or code formatting to your response. Provide a beautifully formatted professional legal advice response in markdown.",
         user=prompt,
+        model=settings.nim_reasoning_model,
     )
     
     # Append the verification report to the end of the user response

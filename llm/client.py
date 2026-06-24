@@ -33,11 +33,13 @@ async def chat(
     user: str,
     temperature: float = 0.1,   # low temp for legal tasks — determinism matters
     max_tokens: int = 2048,
+    model: str | None = None,
 ) -> str:
     openai_client = get_client()
+    model_name = model or settings.nim_model
     try:
         response = await openai_client.chat.completions.create(
-            model=settings.nim_model,
+            model=model_name,
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
@@ -47,7 +49,7 @@ async def chat(
         )
         return response.choices[0].message.content
     except Exception as e:
-        logger.error(f"Error calling NIM chat endpoint: {e}")
+        logger.error(f"Error calling NIM chat endpoint for model {model_name}: {e}")
         raise e
 
 async def chat_structured(
@@ -55,6 +57,7 @@ async def chat_structured(
     user: str,
     output_schema: Type[T],
     temperature: float = 0.1,
+    model: str | None = None,
 ) -> T:
     """Forces LLM to return valid JSON matching the schema with robust extraction."""
     schema_str = json.dumps(output_schema.model_json_schema(), indent=2)
@@ -64,7 +67,7 @@ CRITICAL: Respond ONLY with valid JSON matching this exact schema. Do not includ
 Schema:
 {schema_str}"""
     
-    raw = await chat(augmented_system, user, temperature)
+    raw = await chat(augmented_system, user, temperature, model=model)
     
     # Robust cleaning and JSON boundary extraction
     cleaned = raw.strip()

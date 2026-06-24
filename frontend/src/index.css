@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+    @apply bg-[#0b0c10] text-[#c5c6c7] antialiased overflow-x-hidden;
+  }
+
+  /* Custom Scrollbar for premium dark-mode look */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #0f1015;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #1f2833;
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #45f3ff;
+  }
+}
+
+/* Custom styles for glassmorphic visual excellence */
+.glass-panel {
+  background: rgba(15, 22, 36, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(25, 34, 56, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: rgba(25, 34, 56, 0.55);
+  border-color: rgba(69, 243, 255, 0.25);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.glow-text {
+  text-shadow: 0 0 10px rgba(69, 243, 255, 0.3);
+}
+
+/* Custom glow animations for status indicators */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 10px rgba(69, 243, 255, 0.5);
+  }
+  50% {
+    opacity: 0.5;
+    box-shadow: 0 0 4px rgba(69, 243, 255, 0.2);
+  }
+}
+
+.active-pulse {
+  animation: pulse-glow 2s infinite ease-in-out;
+}

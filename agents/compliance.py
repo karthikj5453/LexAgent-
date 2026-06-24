@@ -5,6 +5,7 @@ from llm.structured import ComplianceResult
 from retrieval.dense import DenseRetriever
 from retrieval.sparse import BM25Retriever
 from retrieval.fusion import reciprocal_rank_fusion
+from config import settings
 import logging
 
 logger = logging.getLogger("lexagent.agents.compliance")
@@ -69,6 +70,7 @@ Analyze if there are any clauses that violate statutory regulations or are other
             system=COMPLIANCE_SYSTEM,
             user=user_prompt,
             output_schema=ComplianceResult,
+            model=settings.nim_reasoning_model,
         )
     except Exception as e:
         logger.error(f"Compliance check failed: {e}")
