@@ -14,6 +14,7 @@ from retrieval.dense import DenseRetriever
 from retrieval.sparse import BM25Retriever
 from config import settings
 from api.database import init_db, get_db, Document as DBDocument, ChatSession, Message as DBMessage
+from api.tracing import setup_tracing
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -21,9 +22,11 @@ logger = logging.getLogger("lexagent.api")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: initialize database tables
+    # Startup: initialize database tables and tracing hooks
     logger.info("Initializing database tables...")
     init_db()
+    logger.info("Setting up observability tracing...")
+    setup_tracing()
     yield
     # Shutdown logic (if any)
 
