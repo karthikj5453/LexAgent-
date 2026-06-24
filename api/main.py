@@ -1,8 +1,13 @@
+import sys
+import os
+
+# Auto-configure python path for direct imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uuid
-import os
 import asyncio
 import logging
 from contextlib import asynccontextmanager
