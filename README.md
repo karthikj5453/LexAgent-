@@ -1,486 +1,164 @@
-````markdown
-# ⚖️ LexAgent
+# ⚖️ LexAgent: Trustworthy Multi-Agent Legal & Compliance Intelligence
 
-> **Trustworthy Multi-Agent Legal & Compliance Intelligence Platform for Indian Enterprises**
+> **Verification-First Legal AI for Indian Enterprises powered by NVIDIA NIM, Nemotron-70B, and Hybrid RRF Retrieval.**
+
+---
 
 <p align="center">
-  <img src="https://img.shields.io/badge/NVIDIA-NIM-76B900?style=for-the-badge&logo=nvidia&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Multi--Agent-AI-blue?style=for-the-badge"/>
-  <img src="https://img.shields.io/badge/Hybrid-RAG-orange?style=for-the-badge"/>
-  <img src="https://img.shields.io/badge/Verification-First-red?style=for-the-badge"/>
-</p>
-
-<p align="center">
-  <b>Built for the NVIDIA India Agentic AI Open Hackathon</b>
+  <img src="https://img.shields.io/badge/NVIDIA-NIM-76B900?style=for-the-badge&logo=nvidia&logoColor=white" alt="NVIDIA NIM"/>
+  <img src="https://img.shields.io/badge/Multi--Agent-LangGraph-blue?style=for-the-badge" alt="Multi-Agent"/>
+  <img src="https://img.shields.io/badge/Hybrid-RAG%20(RRF)-orange?style=for-the-badge" alt="Hybrid RAG"/>
+  <img src="https://img.shields.io/badge/Jurisdiction-India-FF9933?style=for-the-badge" alt="Jurisdiction India"/>
+  <img src="https://img.shields.io/badge/Verification-First-red?style=for-the-badge" alt="Verification First"/>
 </p>
 
 ---
 
-## 🚨 The Problem
+## 🚨 The Challenge: Hallucinated Legal Claims
 
-Legal AI systems can generate convincing answers, but they often suffer from a critical issue:
+In high-stakes enterprise legal and compliance workflows, traditional LLMs suffer from a critical flaw: **plausible hallucinations**. A generative AI might draft an elegant contract clause or verify compliance, but cite non-existent statutory sections (e.g., *"Section 999 of the RBI Regulations"*).
 
-### Hallucinated Legal Claims
+These fake citations lead to:
+* **Compliance Violations** & legal penalties.
+* **Contractual Disputes** during execution.
+* **Loss of Trust** in automation technologies.
 
-Example:
+**LexAgent solves this by reversing the paradigm. Instead of prioritizing text generation, LexAgent prioritizes factual grounding and citation verification.**
 
-```text
-"Section 999 of RBI Regulation states..."
-````
-
-The section may not exist.
-
-In legal workflows, hallucinated citations can result in:
-
-* Compliance violations
-* Financial penalties
-* Contractual disputes
-* Loss of business trust
-
-Most legal copilots focus on generating answers.
-
-**LexAgent focuses on verifying answers.**
+> 💡 **Core Principle: No Traceable Citation = No Response.**
 
 ---
 
-## 💡 Our Solution
+## 🏗️ System Architecture
 
-LexAgent is a verification-first, multi-agent legal intelligence platform that combines:
+LexAgent utilizes a **Supervisor-Worker Multi-Agent Architecture** that divides complex legal requests into parallel, specialized tasks, enforces factual grounding, and synthesizes a verified report.
 
-* Hybrid Retrieval-Augmented Generation (RAG)
-* Specialized Legal AI Agents
-* NVIDIA NIM Inference
-* Grounding Verification Engine
-
-to provide citation-backed legal intelligence for Indian enterprises.
-
-### Core Principle
-
-> **No Citation = No Output**
-
-Every legal claim must be linked to retrieved evidence before reaching the user.
-
----
-
-# ⭐ Why LexAgent?
-
-### Traditional Legal AI
-
-```text
-User
- ↓
-LLM
- ↓
-Answer
-```
-
-Problems:
-
-❌ Hallucinated regulations
-
-❌ Fake citations
-
-❌ No explainability
-
-❌ Difficult to trust
-
----
-
-### LexAgent
-
-```text
-User
- ↓
-Hybrid Retrieval
- ↓
-Specialized Agents
- ↓
-Verification Engine
- ↓
-Evidence-Backed Answer
-```
-
-Benefits:
-
-✅ Source-backed legal analysis
-
-✅ Reduced hallucinations
-
-✅ Explainable recommendations
-
-✅ Enterprise-grade trust
-
----
-
-# 🏗️ System Architecture
-
-```text
-                   User / API
-                        │
-                        ▼
-                 FastAPI Gateway
-          (Auth • Routing • Sessions)
-                        │
-                        ▼
-                Supervisor Agent
-      (Intent Classification & Task Routing)
-                        │
- ┌──────────────┬──────────────┬──────────────┐
- │              │              │
- ▼              ▼              ▼
-
-Contract     Compliance     Drafting
- Review         Agent         Agent
-
- └──────────────┼──────────────┘
-                ▼
-
-       Grounding Verification Engine
-      (Fact Check • Citation Validation)
-
-                ▼
-
-          Final Synthesizer
-
-                ▼
-
-      Verified Legal Response
+```mermaid
+graph TD
+    User([User / API Request]) --> Gateway[FastAPI Gateway]
+    Gateway --> Supervisor[Supervisor Agent<br/><i>Intent Classification & Routing</i>]
+    
+    %% Specialist Agents
+    Supervisor -->|Orchestrate| ContractReview[Contract Review Agent<br/><i>Risk & Clause Analysis</i>]
+    Supervisor -->|Orchestrate| Compliance[Compliance Agent<br/><i>Indian Law Validation</i>]
+    Supervisor -->|Orchestrate| Drafting[Drafting Agent<br/><i>Clause Synthesis</i>]
+    
+    %% RAG Pipeline
+    ContractReview & Compliance & Drafting -->|Parallel Query| HybridRAG[Hybrid RAG Engine]
+    HybridRAG --> Dense[Dense Vector Search<br/><i>NVIDIA Embeddings + ChromaDB</i>]
+    HybridRAG --> Sparse[Sparse Search<br/><i>BM25 Keyword Matching</i>]
+    
+    Dense & Sparse -->|Combine Results| RRF[Reciprocal Rank Fusion - RRF]
+    RRF -->|Retrieve Evidence Chunks| ReviewExecution[Generate Agent Output]
+    
+    %% Verification Layer
+    ReviewExecution -->|Extract Claims| ClaimExtraction[Factual Claim Extractor]
+    ClaimExtraction -->|Verify Claims| GroundingEngine[Grounding Verification Engine]
+    GroundingEngine -->|Cross-Reference Chunks| VerificationReport{Is Factually Grounded?}
+    
+    %% Final Synthesis
+    VerificationReport -->|Yes - Grounded| Synthesizer[Final Response Synthesizer]
+    VerificationReport -->|No - Flag Hallucination| Synthesizer
+    
+    Synthesizer --> FinalOutput([Verified Legal Response & Citations])
 ```
 
 ---
 
-# 🔄 End-to-End Workflow
+## 🌟 Key Features
 
-### Example Query
+* **Dual-Engine Hybrid Retrieval (RAG)**: Integrates semantic search (NVIDIA Embeddings + ChromaDB) with lexical keyword matching (BM25) fused via Reciprocal Rank Fusion (RRF) to retrieve legal clauses with pinpoint accuracy.
+* **Factual Grounding Engine**: Runs an automated claim-extraction step on all specialist agent responses, verifying each claim's existence against the source contract text. Hallucinated claims are automatically rejected or flagged.
+* **Indian Statutory Alignment**: Pre-configured agents specifically mapped to evaluate contracts against Indian statutes:
+  * **Indian Contract Act, 1872** (Validity & restraint of trade checks)
+  * **Companies Act, 2013** (Corporate authorization & governance compliance)
+  * **Information Technology Act, 2000** (Data protection, privacy, & e-signature validity)
+  * **SEBI Guidelines & RBI Circulars** (For financial and market-related clauses)
+* **Supervisor-Worker Orchestration**: Autonomously parses user intent and splits requests into sub-tasks, running specialist agents in parallel using Python `asyncio` for low-latency responses.
 
-> Review this NDA and check whether it complies with Indian law.
+---
 
-### Step 1 — Upload Contract
+## ⚡ Powered by NVIDIA NIM Stack
 
-User uploads an NDA.
+LexAgent is optimized to leverage NVIDIA's enterprise-grade GenAI inference software stack:
 
-### Step 2 — Intent Classification
+| Technology Layer | NVIDIA Product | Implementation / Benefit |
+| :--- | :--- | :--- |
+| **LLM Inference Gateway** | **NVIDIA NIM API** | Low-latency inference hosting optimized model weights. |
+| **Cognitive Reasoning** | **Nemotron-70B-Instruct** | Deep reasoning model used for final response synthesis and claim verification. |
+| **Intent & Quick Extraction** | **Llama-3.1-8B-Instruct** | Low-latency worker model used for fast sub-task intent classification. |
+| **Dense Vector Embeddings** | **NVIDIA NV-Embed-QA-E5-V5** | High-performance embedding model optimized for retrieval-augmented generation. |
+| **Acceleration (Planned)** | **RAPIDS cuVS** | GPU-accelerated vector index lookup to handle thousands of pages of contract text. |
+| **Safety Shield (Planned)** | **NeMo Guardrails** | Configured rails to prevent jailbreaks, prompt injections, and off-topic requests. |
 
-Supervisor Agent identifies:
+---
 
+## 🔄 End-to-End Workflow Example
+
+When a user submits: *"Review this NDA and check if it complies with Indian law."*
+
+1. **Document Upload**: The PDF contract is uploaded, parsed page-by-page, and indexed.
+2. **Intent Classification**: The Supervisor identifies the document and targets `contract_review` and `compliance` tasks.
+3. **Evidence Retrieval**:
+   * **Dense Search** matches concepts (e.g., "limitation of liability" matches "damages cap").
+   * **Sparse Search** finds exact keyword references (e.g., "Section 27", "Arbitration").
+   * **RRF** ranks and returns the top 5 most relevant legal segments.
+4. **Specialist Evaluation**:
+   * **Contract Reviewer** isolates risk clauses, assesses risk level, and generates a structured JSON review.
+   * **Compliance Specialist** evaluates validity under the Indian Contract Act and flags anomalies.
+5. **Grounding Verification**:
+   * The agent output is evaluated to extract all factual assertions (e.g., *"This NDA restricts the vendor's trade for 3 years"*).
+   * Each assertion is verified against retrieved contract chunks.
+   * A confidence score is computed. Unverified assertions are listed under `hallucinated_claims`.
+6. **Synthesis**: Results are combined into a clean, markdown-formatted professional legal summary with clear citations and risk flags.
+
+---
+
+## 🔌 API Endpoints
+
+### 1. Upload & Index Contract
+* **Endpoint**: `POST /upload`
+* **Content-Type**: `multipart/form-data`
+* **Response**:
 ```json
 {
-  "intent": "review_and_compliance",
-  "requires_document": true
+  "doc_id": "9a31e8c9-fa2b-42ab-9d8a-ee6465c1979b",
+  "filename": "Vendor_Agreement.pdf",
+  "chunks_indexed": 42
 }
 ```
 
-### Step 3 — Parallel Agent Execution
-
-#### Contract Review Agent
-
-Analyzes:
-
-* Liability clauses
-* Confidentiality clauses
-* Termination clauses
-* Intellectual Property clauses
-
-#### Compliance Agent
-
-Checks against:
-
-* Indian Contract Act, 1872
-* Companies Act, 2013
-* IT Act, 2000
-* RBI Circulars
-* SEBI Guidelines
-
-### Step 4 — Hybrid Retrieval
-
-```text
-Query
-  │
-  ├── Dense Retrieval (ChromaDB)
-  │
-  ├── Sparse Retrieval (BM25)
-  │
-  ▼
-  RRF Fusion
-  ▼
-Top Relevant Evidence
-```
-
-### Step 5 — NVIDIA NIM Reasoning
-
-Retrieved evidence is passed to:
-
-```text
-NVIDIA NIM
- └─ Nemotron-70B
-```
-
-for structured legal reasoning.
-
-### Step 6 — Verification Layer
-
-Every generated claim is validated against retrieved evidence.
-
-Example:
-
-```text
-Claim:
-"Section 999 RBI Regulation"
-```
-
-Verification Result:
-
-```text
-No supporting source found.
-```
-
-Output:
-
-❌ Claim Rejected
-
-### Step 7 — Final Response
-
-Only verified findings are returned to the user.
-
----
-
-# 🛡️ Verification Engine (Core Innovation)
-
-The Verification Agent is the trust layer of LexAgent.
-
-Responsibilities:
-
-* Validate citations
-* Detect hallucinations
-* Cross-check legal claims
-* Assign grounding score
-* Block unsupported outputs
-
-### Why It Matters
-
-Most legal AI tools answer questions.
-
-**LexAgent proves its answers.**
-
-This dramatically improves reliability in high-stakes legal environments.
-
----
-
-# 🧠 Hybrid Retrieval Pipeline
-
-### Dense Retrieval
-
-**Technology**
-
-* NVIDIA Embeddings
-* ChromaDB
-
-**Purpose**
-
-Semantic understanding.
-
-Example:
-
-```text
-Liability Protection
-```
-
-matches
-
-```text
-Limitation of Damages
-```
-
----
-
-### Sparse Retrieval
-
-**Technology**
-
-* BM25
-
-**Purpose**
-
-Exact citation matching.
-
-Example:
-
-```text
-Section 138
-```
-
-returns exact references.
-
----
-
-### Reciprocal Rank Fusion (RRF)
-
-Combines:
-
-```text
-Dense Results
-+
-Sparse Results
-```
-
-to maximize retrieval accuracy.
-
----
-
-# 🚀 NVIDIA-Powered Stack
-
-| Layer            | Technology             |
-| ---------------- | ---------------------- |
-| LLM Inference    | NVIDIA NIM             |
-| Foundation Model | Nemotron-70B           |
-| Embeddings       | NVIDIA NV-Embed-QA-E5  |
-| Optimization     | TensorRT-LLM           |
-| Vector Search    | ChromaDB → RAPIDS cuVS |
-| Safety Layer     | NeMo Guardrails        |
-| Monitoring       | Arize Phoenix          |
-| Deployment       | Docker Compose         |
-
-### Why NVIDIA?
-
-* Faster inference
-* Optimized retrieval
-* Enterprise deployment
-* Multi-agent scalability
-* Production-grade observability
-
----
-
-# 🛠️ Technology Stack
-
-### Frontend
-
-* React
-* TypeScript
-* Tailwind CSS
-
-### Backend
-
-* FastAPI
-* Python
-* AsyncIO
-
-### Retrieval
-
-* ChromaDB
-* BM25
-* RRF
-* NVIDIA Embeddings
-
-### Agent Framework
-
-* LangGraph
-* Supervisor-Worker Architecture
-
-### LLM Layer
-
-* NVIDIA NIM
-* Nemotron-70B
-
-### Infrastructure
-
-* Docker Compose
-* Arize Phoenix
-* NeMo Guardrails
-
----
-
-# 📊 Evaluation Metrics
-
-LexAgent is designed to be measurable.
-
-### Retrieval Metrics
-
-* Precision@5
-* Recall@10
-* RRF Ranking Quality
-
-### Agent Metrics
-
-* Intent Classification Accuracy
-* Grounding Score
-* Verification Pass Rate
-
-### System Metrics
-
-* Response Latency
-* Token Usage
-* Agent Execution Time
-
-### Trust Metrics
-
-* Citation Accuracy
-* Hallucination Reduction Rate
-* Evidence Coverage
-
----
-
-# 🎯 Current MVP Scope
-
-The hackathon MVP focuses on:
-
-* ✅ NDA Review
-* ✅ Compliance Analysis
-* ✅ Risk Detection
-* ✅ Citation Verification
-* ✅ NVIDIA NIM Integration
-
-Rather than supporting every legal workflow, LexAgent prioritizes one fully working and trustworthy end-to-end experience.
-
----
-
-# 🔌 API Endpoints
-
-## Upload Contract
-
-```http
-POST /upload
-```
-
-### Response
-
+### 2. Multi-Agent Chat
+* **Endpoint**: `POST /chat`
+* **Payload**:
 ```json
 {
-  "doc_id": "8a31e8c9-fa2b-42ab-9d8a-ee6465c1979b",
-  "filename": "Service_Agreement.pdf",
-  "chunks_indexed": 34
+  "message": "Verify the dispute resolution clauses and draft an amendment to move jurisdiction to Mumbai.",
+  "session_id": "session_user_456",
+  "doc_id": "9a31e8c9-fa2b-42ab-9d8a-ee6465c1979b"
 }
 ```
-
----
-
-## Chat with Supervisor
-
-```http
-POST /chat
-```
-
-### Request
-
+* **Response**:
 ```json
 {
-  "message": "Review this agreement and flag risky liability clauses.",
-  "session_id": "session_user_001",
-  "doc_id": "8a31e8c9-fa2b-42ab-9d8a-ee6465c1979b"
-}
-```
-
-### Response
-
-```json
-{
-  "response": "...",
+  "response": "... Markdown synthesized response containing legal review, compliance analysis, and Mumbai jurisdiction amendment ...",
   "intent": {
-    "intent": "review",
-    "sub_tasks": ["review"],
+    "intent": "compliance",
+    "sub_tasks": ["compliance", "draft"],
     "requires_document": true
   },
   "agent_results": {
-    "review": {}
+    "compliance": {
+      "is_compliant": true,
+      "issues": [],
+      "summary": "The clause complies with Indian laws."
+    },
+    "draft": {
+      "drafted_clause_type": "Dispute Resolution",
+      "drafted_text": "This Agreement shall be governed by Indian law, and disputes shall be subject to the exclusive jurisdiction of the courts of Mumbai...",
+      "key_terms_explained": ["Exclusive jurisdiction", "Mumbai courts"],
+      "commercial_implications": "Limits litigation venue risks to Mumbai."
+    }
   },
   "verification_passed": true
 }
@@ -488,113 +166,70 @@ POST /chat
 
 ---
 
-# 🚀 Getting Started
+## 🚀 Getting Started
 
-```bash
-git clone https://github.com/karthikj5453/LexAgent-.git
-cd LexAgent-
-```
+### Prerequisites
+* Python 3.10+
+* NVIDIA NIM API Key (or OpenAI API Key)
 
-### Create Virtual Environment
+### Installation
 
-```bash
-python -m venv .venv
-```
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/karthikj5453/LexAgent-.git
+   cd LexAgent-
+   ```
 
-### Activate Environment
+2. **Create a Virtual Environment**:
+   ```bash
+   python -m venv .venv
+   ```
 
-#### Windows
+3. **Activate the Environment**:
+   * **Windows**:
+     ```powershell
+     .\.venv\Scripts\activate
+     ```
+   * **Linux/macOS**:
+     ```bash
+     source .venv/bin/activate
+     ```
 
-```bash
-.\.venv\Scripts\activate
-```
+4. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-#### Linux / macOS
+5. **Configure Environment Variables**:
+   Create a `.env` file in the root directory:
+   ```env
+   NIM_API_KEY=your_nvidia_api_key
+   NIM_BASE_URL=https://integrate.api.nvidia.com/v1
+   NIM_MODEL=nvidia/llama-3.1-nemotron-70b-instruct
+   NIM_EMBEDDING_MODEL=nvidia/nv-embedqa-e5-v5
+   ```
 
-```bash
-source .venv/bin/activate
-```
+---
 
-### Install Dependencies
+## 🖥️ Running the Application
 
-```bash
-pip install -r requirements.txt
-```
-
-### Configure Environment Variables
-
-Create a `.env` file:
-
-```env
-NIM_API_KEY=your_nvidia_api_key
-NIM_BASE_URL=https://integrate.api.nvidia.com/v1
-NIM_MODEL=nvidia/llama-3.1-nemotron-70b-instruct
-NIM_EMBEDDING_MODEL=nvidia/nv-embedqa-e5-v5
-```
-
-### Run Backend
-
+### 1. Start the FastAPI Server
 ```bash
 uvicorn api.main:app --reload --port 8000
 ```
+Visit the interactive Swagger API documentation at: **[http://localhost:8000/docs](http://localhost:8000/docs)**.
 
-### Open API Docs
-
-```text
-http://localhost:8000/docs
+### 2. Run the Test Suite
+Ensure the current folder is on the `PYTHONPATH` and run pytest:
+```bash
+$env:PYTHONPATH="."
+pytest
 ```
 
 ---
 
-# 🌍 Future Roadmap
+## 📈 Tracing & Trutworthiness Metrics
 
-### Phase 1
-
-* NDA Review
-* Compliance Analysis
-* Verification Engine
-
-### Phase 2
-
-* Multi-contract support
-* Advanced reranking
-* RAPIDS cuVS integration
-
-### Phase 3
-
-* Legal Drafting Assistant
-* Case Law Intelligence
-* Explainable Legal AI
-
-### Phase 4
-
-* e-Courts Integration
-* MCA / GST APIs
-* Compliance Automation
-
-### Phase 5
-
-* Multilingual Legal AI
-* Voice Legal Assistant
-* Enterprise SaaS Platform
-
----
-
-# 🏆 What Makes LexAgent Unique?
-
-Most legal AI systems answer questions.
-
-**LexAgent verifies answers.**
-
-> Every recommendation is explainable.
->
-> Every citation is traceable.
->
-> Every legal claim is evidence-backed.
-
-### Trust > Generation
-
-Because in legal AI, trust matters more than generation.
-
-```
-```
+LexAgent uses standardized evaluation frameworks to prove its grounding capabilities:
+* **Factual Grounding Score**: Calculated as the ratio of verified claims to total generated claims.
+* **Trace Observability**: Integrates OpenInference tracing dashboard (compatible with Arize Phoenix) to inspect the execution flows, RAG chunks, and latency profiles of individual worker agents.
