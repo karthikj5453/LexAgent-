@@ -1,8 +1,8 @@
 # ⚖️ LexAgent
 
-> **Multi-Agent Legal & Compliance Platform for Indian Enterprises**
+> **Trustworthy Multi-Agent Legal & Compliance Intelligence Platform for Indian Enterprises**
 
-LexAgent is a production-grade, multi-agent AI system designed for reviewing commercial contracts under Indian law, analyzing regulatory compliance, drafting clauses, and fact-checking outputs using a state-of-the-art hybrid retrieval pipeline.
+LexAgent is a production-grade, multi-agent AI-system designed for reviewing commercial contracts under Indian law, analyzing regulatory compliance, drafting clauses, and fact-checking outputs using a state-of-the-art hybrid retrieval pipeline.
 
 ---
 
