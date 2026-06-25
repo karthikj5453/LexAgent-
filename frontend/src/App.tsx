@@ -297,9 +297,14 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#07090e] text-[#e2e8f0]">
+    <div className="relative flex h-screen w-screen overflow-hidden bg-[#030509] text-[#e2e8f0]">
+      {/* Ambient background glows for premium glassmorphism pop */}
+      <div className="glowing-blob blob-purple"></div>
+      <div className="glowing-blob blob-emerald"></div>
+      <div className="glowing-blob blob-blue"></div>
+
       {/* 1. SIDEBAR - Workspaces and uploads */}
-      <div className="w-80 flex flex-col border-r border-gray-800 bg-[#0a0d14] flex-shrink-0">
+      <div className="w-80 flex flex-col border-r border-gray-800 bg-[#070a0f]/60 backdrop-blur-xl flex-shrink-0 z-10">
         <div className="p-6 border-b border-gray-800 flex items-center space-x-3">
           <div className="p-2 bg-[#10b981]/15 rounded-lg border border-[#10b981]/30">
             <Scale className="h-6 w-6 text-[#10b981] glow-text" />
@@ -397,9 +402,9 @@ function App() {
       </div>
 
       {/* 2. MAIN LAYOUT */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden z-10">
         {/* Left Side: Document View & Analytics */}
-        <div className="flex-1 flex flex-col border-r border-gray-800 bg-[#080b11]">
+        <div className="flex-1 flex flex-col border-r border-gray-800 bg-[#05070c]/50 backdrop-blur-lg">
           {activeDoc ? (
             <>
               {/* Doc Header & Verification Score */}
@@ -801,7 +806,7 @@ function App() {
         </div>
 
         {/* Right Side: Chat Panel & Agent Logs Console */}
-        <div className="w-[450px] flex flex-col bg-[#07090e] border-l border-gray-800 flex-shrink-0">
+        <div className="w-[450px] flex flex-col bg-[#05070c]/60 backdrop-blur-xl border-l border-gray-800 flex-shrink-0">
           
           {/* Agent Activity Terminal */}
           <div className="h-60 flex flex-col border-b border-gray-800 bg-[#06080c] overflow-hidden flex-shrink-0">

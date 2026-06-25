@@ -32,43 +32,85 @@
 
 /* Custom styles for glassmorphic visual excellence */
 .glass-panel {
-  background: rgba(15, 22, 36, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 15, 30, 0.45);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .glass-card {
-  background: rgba(25, 34, 56, 0.35);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
-  background: rgba(25, 34, 56, 0.55);
-  border-color: rgba(69, 243, 255, 0.25);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
   transform: translateY(-2px);
 }
 
 .glow-text {
-  text-shadow: 0 0 10px rgba(69, 243, 255, 0.3);
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
 }
 
 /* Custom glow animations for status indicators */
 @keyframes pulse-glow {
   0%, 100% {
     opacity: 1;
-    box-shadow: 0 0 10px rgba(69, 243, 255, 0.5);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
   }
   50% {
     opacity: 0.5;
-    box-shadow: 0 0 4px rgba(69, 243, 255, 0.2);
+    box-shadow: 0 0 4px rgba(16, 185, 129, 0.2);
   }
 }
 
 .active-pulse {
   animation: pulse-glow 2s infinite ease-in-out;
+}
+
+/* Ambient Background Blobs for Glassmorphism */
+.glowing-blob {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(150px);
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 0;
+  animation: float-blob 20s infinite ease-in-out alternate;
+}
+
+.blob-purple {
+  background: radial-gradient(circle, #a855f7, transparent 70%);
+  top: -10%;
+  left: 20%;
+}
+
+.blob-emerald {
+  background: radial-gradient(circle, #10b981, transparent 70%);
+  bottom: -10%;
+  right: 15%;
+  animation-delay: -5s;
+}
+
+.blob-blue {
+  background: radial-gradient(circle, #3b82f6, transparent 70%);
+  top: 40%;
+  right: -5%;
+  animation-delay: -10s;
+}
+
+@keyframes float-blob {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
 }
