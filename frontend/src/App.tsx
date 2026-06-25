@@ -583,36 +583,69 @@ function App() {
                             <p className="text-sm text-gray-500 italic">No clauses analyzed yet.</p>
                           ) : (
                             reviewResult.clauses?.map((c: any, i: number) => (
-                              <div key={i} className="rounded-xl border border-gray-800 bg-[#0c101a]/80 p-5 space-y-3">
+                              <div key={i} className="rounded-xl border border-gray-800 bg-[#0c101a]/80 p-5 space-y-4 shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+                                {/* Header with Clause Type & Risk */}
                                 <div className="flex justify-between items-start">
                                   <div>
                                     <h4 className="text-sm font-bold text-white">{c.clause_type}</h4>
-                                    <p className="text-[10px] text-gray-500 mt-0.5">Reference: {c.page_reference}</p>
+                                    <p className="text-[10px] text-gray-500 mt-0.5 font-medium">Reference: {c.page_reference}</p>
                                   </div>
-                                  <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
-                                    c.risk_level === 'critical' || c.risk_level === 'high' ? 'bg-red-500/15 text-red-400' :
-                                    c.risk_level === 'medium' ? 'bg-amber-500/15 text-amber-400' : 'bg-blue-500/15 text-blue-400'
+                                  <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded border ${
+                                    c.risk_level === 'critical' || c.risk_level === 'high' ? 'bg-red-500/15 text-red-400 border-red-500/30' :
+                                    c.risk_level === 'medium' ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' : 'bg-blue-500/15 text-blue-400 border-blue-500/30'
                                   }`}>
                                     {c.risk_level}
                                   </span>
                                 </div>
-                                <div className="p-3 bg-gray-900/40 rounded-lg border border-gray-800/60 text-xs text-gray-400 italic">
-                                  "{c.clause_text}"
+
+                                {/* Risk Explanation Text */}
+                                <div className="text-xs text-gray-300 bg-gray-900/30 p-3 rounded-lg border border-gray-850/60 leading-relaxed">
+                                  <span className="font-bold text-red-400/90">Risk Assessment: </span>
+                                  {c.risk_explanation}
                                 </div>
-                                <div className="text-xs text-gray-300">
-                                  <span className="font-bold text-red-400/80">Risk Assessment: </span>{c.risk_explanation}
-                                </div>
-                                {c.suggested_revision && (
-                                  <div className="p-3 bg-emerald-950/15 rounded-lg border border-emerald-800/30">
-                                    <div className="flex items-center justify-between text-xs font-bold text-[#10b981] mb-1.5">
-                                      <span>Suggested Balanced Revision</span>
-                                      <button onClick={() => copyToClipboard(c.suggested_revision)} className="p-1 hover:bg-emerald-500/10 rounded transition-all">
-                                        <Copy className="h-3 w-3" />
-                                      </button>
+
+                                {/* Split Git-Style Diff Cards */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {/* Left Card: Original Risky text */}
+                                  <div className="p-3.5 bg-red-950/10 rounded-xl border border-red-900/20 flex flex-col justify-between">
+                                    <div>
+                                      <div className="text-[9px] uppercase tracking-wide font-bold text-red-400 mb-1.5 flex items-center gap-1">
+                                        <AlertCircle className="h-3.5 w-3.5" /> Original Contract Language
+                                      </div>
+                                      <p className="text-xs text-gray-400 italic font-medium leading-relaxed">
+                                        "{c.clause_text}"
+                                      </p>
                                     </div>
-                                    <p className="text-xs text-gray-300">{c.suggested_revision}</p>
+                                    <span className="mt-4 text-[9px] text-red-500/70 font-semibold uppercase tracking-wider">Risky / Unenforceable</span>
                                   </div>
-                                )}
+
+                                  {/* Right Card: Proposed Revision */}
+                                  {c.suggested_revision ? (
+                                    <div className="p-3.5 bg-emerald-950/10 rounded-xl border border-emerald-900/20 flex flex-col justify-between">
+                                      <div>
+                                        <div className="text-[9px] uppercase tracking-wide font-bold text-[#10b981] mb-1.5 flex items-center justify-between">
+                                          <span className="flex items-center gap-1">
+                                            <CheckCircle2 className="h-3.5 w-3.5" /> Balanced Compliant Revision
+                                          </span>
+                                          <button 
+                                            onClick={() => copyToClipboard(c.suggested_revision)}
+                                            className="p-1 hover:bg-[#10b981]/15 rounded transition-all text-[#10b981] border border-[#10b981]/20 bg-[#10b981]/5"
+                                          >
+                                            <Copy className="h-3 w-3" />
+                                          </button>
+                                        </div>
+                                        <p className="text-xs text-gray-200 font-medium leading-relaxed">
+                                          "{c.suggested_revision}"
+                                        </p>
+                                      </div>
+                                      <span className="mt-4 text-[9px] text-[#10b981]/80 font-bold uppercase tracking-wider">Compliant / Recommended</span>
+                                    </div>
+                                  ) : (
+                                    <div className="p-3.5 bg-gray-900/30 rounded-xl border border-gray-800 flex items-center justify-center text-xs text-gray-500 italic">
+                                      No revision required for this risk level.
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             ))
                           )}
@@ -784,6 +817,43 @@ function App() {
                 Clear
               </button>
             </div>
+            
+            {/* Visual Agent Status Graph */}
+            <div className="px-4 py-3 bg-[#080b11] border-b border-gray-800/80 flex items-center justify-between text-[10px] space-x-1 flex-shrink-0">
+              <div className="flex flex-col items-center flex-1">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center border transition-all ${
+                  isLoading && agentLogs[agentLogs.length - 1]?.agent.includes("Supervisor")
+                    ? "bg-amber-500/10 border-amber-500 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)] animate-pulse"
+                    : "bg-gray-900 border-gray-800 text-gray-500"
+                }`}>
+                  <Scale className="h-4 w-4" />
+                </div>
+                <span className="text-[9px] mt-1 text-gray-500 font-semibold">Supervisor</span>
+              </div>
+              <div className="h-[1px] bg-gray-800 w-3 mb-4"></div>
+              <div className="flex flex-col items-center flex-1">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center border transition-all ${
+                  isLoading && (agentLogs[agentLogs.length - 1]?.agent.includes("Review") || agentLogs[agentLogs.length - 1]?.agent.includes("Compliance") || agentLogs[agentLogs.length - 1]?.agent.includes("Draft"))
+                    ? "bg-purple-500/10 border-purple-500 text-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.3)] animate-pulse"
+                    : "bg-gray-900 border-gray-800 text-gray-500"
+                }`}>
+                  <Layers className="h-4 w-4" />
+                </div>
+                <span className="text-[9px] mt-1 text-gray-500 font-semibold">Specialists</span>
+              </div>
+              <div className="h-[1px] bg-gray-800 w-3 mb-4"></div>
+              <div className="flex flex-col items-center flex-1">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center border transition-all ${
+                  isLoading && agentLogs[agentLogs.length - 1]?.agent.includes("Verification")
+                    ? "bg-emerald-500/10 border-emerald-500 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.3)] animate-pulse"
+                    : "bg-gray-900 border-gray-800 text-gray-500"
+                }`}>
+                  <ShieldCheck className="h-4 w-4" />
+                </div>
+                <span className="text-[9px] mt-1 text-gray-500 font-semibold">Grounding</span>
+              </div>
+            </div>
+
             <div className="flex-1 overflow-y-auto p-4 font-mono text-[11px] space-y-1.5 bg-black/30">
               {agentLogs.map((log, idx) => (
                 <div key={idx} className="flex items-start space-x-1.5 leading-normal">

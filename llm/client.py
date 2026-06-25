@@ -38,12 +38,19 @@ async def chat(
     openai_client = get_client()
     model_name = model or settings.nim_model
     try:
-        response = await openai_client.chat.completions.create(
-            model=model_name,
-            messages=[
+        messages = []
+        if "guard" in model_name.lower():
+            # For guardrail models (like Llama-Guard), merge system instructions and user input into a single user message
+            messages = [{"role": "user", "content": f"{system}\n\n[USER INPUT]\n{user}"}]
+        else:
+            messages = [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
-            ],
+            ]
+
+        response = await openai_client.chat.completions.create(
+            model=model_name,
+            messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
         )
