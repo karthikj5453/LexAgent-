@@ -19,17 +19,22 @@ def get_embed_client() -> AsyncOpenAI:
         )
     return embed_client
 
-async def embed_texts(texts: list[str]) -> list[list[float]]:
+async def embed_texts(texts: list[str], input_type: str = "passage") -> list[list[float]]:
     """Batch embed texts using NIM's embedding model."""
     if not texts:
         return []
     
     client = get_embed_client()
     try:
+        extra_body = {}
+        if "nv-embedqa" in settings.nim_embedding_model.lower():
+            extra_body = {"input_type": input_type}
+            
         response = await client.embeddings.create(
             model=settings.nim_embedding_model,
             input=texts,
             encoding_format="float",
+            extra_body=extra_body,
         )
         return [item.embedding for item in response.data]
     except Exception as e:
@@ -41,5 +46,5 @@ async def embed_texts(texts: list[str]) -> list[list[float]]:
         raise e
 
 async def embed_query(query: str) -> list[float]:
-    results = await embed_texts([query])
+    results = await embed_texts([query], input_type="query")
     return results[0]
