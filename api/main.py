@@ -116,10 +116,22 @@ async def upload_document(file: UploadFile = File(...), db: Session = Depends(ge
         logger.error(f"Upload and indexing failed: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to process and index document: {str(e)}")
 
+from api.pii_redactor import PIIRedactor
+
+def recursive_unredact(data, redactor: PIIRedactor):
+    if isinstance(data, str):
+        return redactor.unredact(data)
+    elif isinstance(data, dict):
+        return {k: recursive_unredact(v, redactor) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [recursive_unredact(item, redactor) for item in data]
+    return data
+
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
     """
     Primary chat query endpoint routed through the Supervisor agent.
+    Filters PII on entry and restores it on output for enterprise privacy.
     """
     session_id = request.session_id
     
@@ -136,20 +148,35 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
     session_history = [{"role": msg.role, "content": msg.content} for msg in db_messages]
     
     try:
+        # Redact PII in user query before processing with agents
+        redactor = PIIRedactor()
+        redacted_message = redactor.redact(request.message)
+        
+        # Also redact session history to prevent leaking PII from past messages
+        redacted_history = []
+        for msg in session_history:
+            redacted_history.append({
+                "role": msg["role"],
+                "content": redactor.redact(msg["content"])
+            })
+            
         result = await handle_request(
-            user_message=request.message,
+            user_message=redacted_message,
             doc_id=request.doc_id,
-            session_history=session_history,
+            session_history=redacted_history,
         )
         
-        # Append user message and assistant response to database
+        # Restore/Unredact the PII values in the final structured results dictionary
+        unredacted_result = recursive_unredact(result, redactor)
+        
+        # Append original user message and unredacted assistant response to database
         user_msg = DBMessage(session_id=session_id, role="user", content=request.message)
-        assistant_msg = DBMessage(session_id=session_id, role="assistant", content=result["response"])
+        assistant_msg = DBMessage(session_id=session_id, role="assistant", content=unredacted_result["response"])
         db.add(user_msg)
         db.add(assistant_msg)
         db.commit()
         
-        return result
+        return unredacted_result
     except Exception as e:
         logger.error(f"Error handling chat request: {e}")
         raise HTTPException(status_code=500, detail=f"Supervisor error: {str(e)}")

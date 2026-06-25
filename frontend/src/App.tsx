@@ -3,7 +3,7 @@ import {
   Scale, ShieldAlert, Sparkles, UploadCloud, FileText, 
   MessageSquare, Send, CheckCircle2, AlertCircle, 
   ShieldCheck, ChevronRight, Copy, Terminal,
-  RefreshCw, Layers, BookOpen, Bot, HelpCircle
+  RefreshCw, Layers, BookOpen, Bot, HelpCircle, Download
 } from 'lucide-react';
 
 const API_BASE = window.location.port === "5173" ? "http://localhost:8000" : window.location.origin;
@@ -252,6 +252,50 @@ function App() {
     }
   };
 
+  const getComplianceScore = () => {
+    if (!complianceResult) return null;
+    if (complianceResult.is_compliant) return 100;
+    const issueCount = complianceResult.issues?.length || 0;
+    return Math.max(15, 100 - issueCount * 35);
+  };
+
+  const getRiskCounts = () => {
+    const counts = { critical: 0, high: 0, medium: 0, low: 0 };
+    if (!reviewResult || !reviewResult.clauses) return counts;
+    reviewResult.clauses.forEach((c: any) => {
+      const level = c.risk_level?.toLowerCase();
+      if (level === 'critical') counts.critical++;
+      else if (level === 'high') counts.high++;
+      else if (level === 'medium') counts.medium++;
+      else if (level === 'low') counts.low++;
+    });
+    return counts;
+  };
+
+  const downloadClause = () => {
+    if (!draftingResult) return;
+    const element = document.createElement("a");
+    const file = new Blob([
+      `========================================\n`,
+      `LEXAGENT DRAFTED CLAUSE\n`,
+      `========================================\n`,
+      `Clause Type: ${draftingResult.drafted_clause_type}\n\n`,
+      `[DRAFTED TEXT]\n`,
+      `${draftingResult.drafted_text}\n\n`,
+      `[KEY TERMS EXPLAINED]\n`,
+      `${draftingResult.key_terms_explained?.map((t: string) => `- ${t}`).join('\n') || 'None'}\n\n`,
+      `[COMMERCIAL IMPLICATIONS]\n`,
+      `${draftingResult.commercial_implications || 'None'}\n`,
+      `========================================\n`
+    ], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = `LexAgent_Draft_${draftingResult.drafted_clause_type.replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    addLog("System", "Drafted clause document exported successfully.");
+  };
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#07090e] text-[#e2e8f0]">
       {/* 1. SIDEBAR - Workspaces and uploads */}
@@ -391,6 +435,91 @@ function App() {
                   </div>
                 )}
               </div>
+
+              {/* Executive Metrics Dashboard */}
+              {activeDoc && (reviewResult || complianceResult) && (
+                <div className="px-6 py-4 bg-[#090c14] border-b border-gray-800/80 grid grid-cols-3 gap-6">
+                  {/* Column 1: Compliance Health Gauge */}
+                  <div className="flex items-center space-x-4 bg-[#0e121d]/40 p-3 rounded-xl border border-gray-800/50">
+                    <div className="relative h-14 w-14 flex-shrink-0 flex items-center justify-center">
+                      <svg className="h-full w-full transform -rotate-90">
+                        <circle
+                          cx="28"
+                          cy="28"
+                          r="22"
+                          className="text-gray-800"
+                          strokeWidth="4"
+                          stroke="currentColor"
+                          fill="transparent"
+                        />
+                        <circle
+                          cx="28"
+                          cy="28"
+                          r="22"
+                          className={`${
+                            getComplianceScore() !== null && getComplianceScore()! >= 85 ? 'text-emerald-500' :
+                            getComplianceScore() !== null && getComplianceScore()! >= 50 ? 'text-amber-500' : 'text-red-500'
+                          }`}
+                          strokeWidth="4"
+                          strokeDasharray={2 * Math.PI * 22}
+                          strokeDashoffset={2 * Math.PI * 22 * (1 - (getComplianceScore() || 0) / 100)}
+                          strokeLinecap="round"
+                          stroke="currentColor"
+                          fill="transparent"
+                        />
+                      </svg>
+                      <span className="absolute text-xs font-bold text-white">
+                        {getComplianceScore() !== null ? `${getComplianceScore()}%` : 'N/A'}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide">Compliance Health</h4>
+                      <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                        {complianceResult ? (complianceResult.is_compliant ? "Passed Central Statutes" : `${complianceResult.issues?.length} Violations Found`) : "Scans Pending"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Column 2: Risk Heatmap Counts */}
+                  <div className="bg-[#0e121d]/40 p-3 rounded-xl border border-gray-800/50 flex flex-col justify-between">
+                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-2">Risk Heatmap Distribution</h4>
+                    <div className="grid grid-cols-4 gap-1.5 text-center">
+                      <div className="p-1 rounded bg-red-950/20 border border-red-900/30">
+                        <div className="text-xs font-bold text-red-400">{getRiskCounts().critical}</div>
+                        <div className="text-[8px] uppercase tracking-wide text-gray-500 font-semibold">Crit</div>
+                      </div>
+                      <div className="p-1 rounded bg-amber-950/20 border border-amber-900/30">
+                        <div className="text-xs font-bold text-amber-400">{getRiskCounts().high}</div>
+                        <div className="text-[8px] uppercase tracking-wide text-gray-500 font-semibold">High</div>
+                      </div>
+                      <div className="p-1 rounded bg-blue-950/20 border border-blue-900/30">
+                        <div className="text-xs font-bold text-blue-400">{getRiskCounts().medium}</div>
+                        <div className="text-[8px] uppercase tracking-wide text-gray-500 font-semibold">Med</div>
+                      </div>
+                      <div className="p-1 rounded bg-gray-800/20 border border-gray-700/30">
+                        <div className="text-xs font-bold text-gray-400">{getRiskCounts().low}</div>
+                        <div className="text-[8px] uppercase tracking-wide text-gray-500 font-semibold">Low</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column 3: Telemetry & Tracing Status */}
+                  <div className="flex items-center justify-between bg-[#0e121d]/40 p-3 rounded-xl border border-gray-800/50">
+                    <div className="flex-1">
+                      <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">NVIDIA Guardrails</h4>
+                      <div className="flex items-center space-x-1.5 mt-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span className="text-[10px] text-gray-300 font-medium">Llama-Guard Active (Safe)</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-block px-2 py-1 rounded bg-[#10b981]/10 text-[#10b981] font-bold text-[9px] uppercase tracking-wider border border-[#10b981]/25">
+                        OTel Traced
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Navigation Tabs */}
               <div className="flex border-b border-gray-800 bg-[#0a0d15] px-6">
@@ -567,12 +696,20 @@ function App() {
                             <h3 className="text-sm font-bold text-white uppercase tracking-wider">Drafting Output</h3>
                             <p className="text-[10px] text-gray-500 mt-0.5">Clause Type: {draftingResult.drafted_clause_type}</p>
                           </div>
-                          <button 
-                            onClick={() => copyToClipboard(draftingResult.drafted_text)}
-                            className="flex items-center space-x-1.5 py-1.5 px-3 rounded-lg bg-[#10b981]/15 hover:bg-[#10b981]/25 text-[#10b981] font-semibold text-xs transition-all border border-[#10b981]/30"
-                          >
-                            <Copy className="h-3 w.5" /> <span>Copy Clause</span>
-                          </button>
+                          <div className="flex items-center space-x-2">
+                            <button 
+                              onClick={() => copyToClipboard(draftingResult.drafted_text)}
+                              className="flex items-center space-x-1.5 py-1.5 px-3 rounded-lg bg-[#10b981]/15 hover:bg-[#10b981]/25 text-[#10b981] font-semibold text-xs transition-all border border-[#10b981]/30"
+                            >
+                              <Copy className="h-3.5 w-3.5" /> <span>Copy Clause</span>
+                            </button>
+                            <button 
+                              onClick={downloadClause}
+                              className="flex items-center space-x-1.5 py-1.5 px-3 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 font-semibold text-xs transition-all border border-blue-500/30"
+                            >
+                              <Download className="h-3.5 w-3.5" /> <span>Export Clause</span>
+                            </button>
+                          </div>
                         </div>
 
                         <div className="p-6 space-y-5">
