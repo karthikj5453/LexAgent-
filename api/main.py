@@ -287,6 +287,12 @@ async def health():
         "embedding_model": settings.nim_embedding_model
     }
 
+# Serve compiled frontend assets
+from fastapi.staticfiles import StaticFiles
+frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
+if os.path.exists(frontend_path):
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+
 # Entrypoint for running standard script directly
 if __name__ == "__main__":
     import uvicorn
